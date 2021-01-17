@@ -7,7 +7,7 @@ import java.util.Base64;
 
 public class AESUtils {
 
-    public static String Encrypt(String sSrc, String sKey) throws Exception {
+    public static String Encrypt(String sSrc, String sKey, String saltIv) throws Exception {
         if (sKey == null) {
             System.out.print("Key为空null");
             return null;
@@ -20,7 +20,12 @@ public class AESUtils {
         byte[] raw = sKey.getBytes();
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");//"算法/模式/补码方式"
-        IvParameterSpec iv = new IvParameterSpec("0102030405060708".getBytes());//使用CBC模式，需要一个向量iv，可增加加密算法的强度
+        IvParameterSpec iv;
+        if (saltIv == null) {
+            iv = new IvParameterSpec("0102030405060708".getBytes());//使用CBC模式，需要一个向量iv，可增加加密算法的强度
+        } else {
+            iv = new IvParameterSpec(saltIv.getBytes());//使用CBC模式，需要一个向量iv，可增加加密算法的强度
+        }
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
         byte[] encrypted = cipher.doFinal(sSrc.getBytes());
 
@@ -28,7 +33,7 @@ public class AESUtils {
     }
 
     // 解密
-    public static String Decrypt(String sSrc, String sKey) throws Exception {
+    public static String Decrypt(String sSrc, String sKey, String saltIv) throws Exception {
         try {
             // 判断Key是否正确
             if (sKey == null) {
@@ -43,8 +48,12 @@ public class AESUtils {
             byte[] raw = sKey.getBytes("ASCII");
             SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            IvParameterSpec iv = new IvParameterSpec("0102030405060708"
-                    .getBytes());
+            IvParameterSpec iv;
+            if (saltIv == null) {
+                iv = new IvParameterSpec("0102030405060708".getBytes());
+            } else {
+                iv = new IvParameterSpec(saltIv.getBytes());
+            }
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
             byte[] encrypted1 = Base64.getDecoder().decode(sSrc);//先用base64解密
             try {

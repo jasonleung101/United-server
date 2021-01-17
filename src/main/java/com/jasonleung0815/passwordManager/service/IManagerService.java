@@ -8,4 +8,6 @@ public interface IManagerService {
 
     Manager getAccount(Long id) throws Exception;
 
+    Manager delAccount(Long id);
+
 }

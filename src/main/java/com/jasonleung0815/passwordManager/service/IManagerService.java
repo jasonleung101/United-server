@@ -6,6 +6,8 @@ public interface IManagerService {
 
     Manager addAccount(Manager manager) throws Exception;
 
+    Manager changeAccount(Manager manager) throws Exception;
+
     Manager getAccount(Long id) throws Exception;
 
     Manager delAccount(Long id);

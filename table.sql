@@ -10,5 +10,5 @@ create table manager
         primary key (id)
 );
 
-grant usage on SEQUENCE manager_id_seq TO myUser;
-grant select,update,insert,delete on table manager TO myUser;
+grant usage on SEQUENCE manager_id_seq TO myUser_role;
+grant select,update,insert,delete on table manager TO myUser_role;

@@ -20,19 +20,33 @@ public class ManagerServiceImpl implements IManagerService {
     @Value("${manager.appkey}")
     private String appkey;
 
-    @Value("${manager.saltkey}")
-    private String saltkey;
-
     @Override
     public Manager addAccount(Manager addForm) throws Exception {
         Manager manager = new Manager();
         manager.setAccount(addForm.getAccount());
         manager.setDomain(addForm.getDomain());
-        //TODO: Think how to add salt to the password and hard to crack
-        String salt = RandomStringUtils.randomAlphabetic(16);
-        manager.setPassword(AESUtils.Encrypt(addForm.getPassword(), appkey, salt));
+        //Solution
+        //let salt = "1234567812345678"
+        //let pwd = "Testing123"
+        //fullPwd = "12345678test12345678ing123"
+        manager.setPassword(AESUtils.Encrypt(setPassword(addForm.getPassword()), appkey, null));
         managerRepository.save(manager);
         return manager;
+    }
+
+    @Override
+    public Manager changeAccount(Manager changeForm) throws Exception {
+        Manager returnManager;
+        Optional<Manager> optionalManager = managerRepository.findById(changeForm.getId());
+        if (optionalManager.isPresent()) {
+            returnManager = optionalManager.get();
+            returnManager.setAccount(changeForm.getAccount());
+            returnManager.setDomain(changeForm.getDomain());
+            returnManager.setPassword(AESUtils.Encrypt(setPassword(changeForm.getPassword()), appkey, null));
+            managerRepository.save(returnManager);
+            return returnManager;
+        }
+        return null;
     }
 
     @Override
@@ -44,14 +58,15 @@ public class ManagerServiceImpl implements IManagerService {
             String wSalt = AESUtils.Decrypt(returnManager.getPassword(), appkey, null);
             //take last 6 char
             if (wSalt != null) {
-                String salt = wSalt.substring(wSalt.length() - 6);
-                returnManager.setPassword("123");
+                int length = Integer.parseInt(wSalt.substring(wSalt.length()-2));
+                String removeFirstSalt = wSalt.substring(8);
+                String firstPwd = removeFirstSalt.substring(0, removeFirstSalt.length()-(removeFirstSalt.length()-(length-6)));
+                String secondPwd = wSalt.substring(0, wSalt.length()-2).substring((wSalt.length()-(length-firstPwd.length())-2));
+                returnManager.setPassword(firstPwd+secondPwd);
                 return returnManager;
             }
-            return null;
-        } else {
-            return null;
         }
+        return null;
     }
 
     @Override
@@ -63,6 +78,22 @@ public class ManagerServiceImpl implements IManagerService {
         } else {
            return null;
         }
+    }
+
+    private String setPassword(String pwd) {
+        String salt = RandomStringUtils.randomAlphabetic(16);
+        String firstSalt = salt.substring(0, salt.length()-8);
+        String endSalt = salt.substring(salt.length()-8);
+        String firstPwd = pwd.substring(0, pwd.length()-6);
+        String endPwd = pwd.substring(firstPwd.length());
+        int length = pwd.length();
+        String fullPwd;
+        if (length<10) {
+            fullPwd = firstSalt + firstPwd + endSalt + endPwd + 0 + length;
+        } else {
+            fullPwd = firstSalt + firstPwd + endSalt + endPwd + length;
+        }
+        return fullPwd;
     }
 
 }

@@ -45,6 +45,12 @@ public class BasicController {
         if (manager == null) {
             return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/change")
+    public ResponseEntity<Manager> changeItem(@RequestBody Manager changeForm) throws Exception {
+        Manager manager = managerService.changeAccount(changeForm);
         return ResponseEntity.ok().body(manager);
     }
 }
